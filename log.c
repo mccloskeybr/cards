@@ -1,6 +1,6 @@
 #include "log.h"
 
-struct Log * log = 0;
+const struct Log * log = 0;
 
 
 /** ---------------- CON/DESTRUCTORS ---------------- **/ 
@@ -46,6 +46,16 @@ void write_to_log(const char * classname, char * buff) {
         log = construct_log(LOGNAME);
     }
 
-    fprintf(log->file, "[%-15.15s] : %s\n", classname, buff);
+
+    time_t timer;
+    time(&timer);
+    struct tm * tm_info = localtime(&timer);
+
+    char * time_buff = calloc(26, sizeof(char));
+    strftime(time_buff, 26, "%Y-%m-%d %H:%M:%S", tm_info);
+
+    fprintf(log->file, "%s [%-15.15s] : %s\n", time_buff, classname, buff);
+
+    free(time_buff);
 
 }

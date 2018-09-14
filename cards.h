@@ -1,3 +1,6 @@
+#ifndef __CARDS_H
+#define __CARDS_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
@@ -62,3 +65,4 @@ void suit_to_string(struct Card * card, char * buff);
 void print_card(struct Card * toPrint);
 void print_deck(struct Deck * toPrint);
 
+#endif //cards.h

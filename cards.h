@@ -59,7 +59,9 @@ void destroy_deck(struct Deck * toFree);
 void destroy_cards_in_deck(struct Deck * deck);
 
 void shuffle(struct Deck * deck);
+
 struct Card * draw_card(struct Deck * deck);
+struct Card * draw_specific_card(struct Deck * deck, uint8_t card_index);
 struct Card * place_card(struct Deck * deck, struct Card * card);
 
 void suit_to_string(struct Card * card, char * buff);

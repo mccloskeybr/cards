@@ -16,6 +16,8 @@ struct Card * construct_card(enum Suit suit, uint8_t rank) {
     card->suit = suit;
     card->rank = rank;
 
+    write_to_log(cards_filename, "Constructed a card successfully.");
+
     return card;
 
 }
@@ -26,6 +28,8 @@ struct Card * construct_card(enum Suit suit, uint8_t rank) {
 void destroy_card(struct Card * toFree) {
 
     free(toFree);
+
+    write_to_log(cards_filename, "Destroyed a card successfully.");
 
 }
 
@@ -39,6 +43,8 @@ struct Deck * construct_deck(int8_t maxCards) {
     deck->currCard = -1;
     deck->maxCards = maxCards;
     deck->cards = malloc(deck->maxCards * sizeof(struct Card *));
+
+    write_to_log(cards_filename, "Constructed a deck successfully.");
 
     return deck;
 
@@ -71,13 +77,10 @@ struct Deck * construct_std_deck() {
  */
 void destroy_deck(struct Deck * toFree) {
 
-    int8_t i;
-    for (i = 0; i < toFree->maxCards; i++) {
-        destroy_card(toFree->cards[i]);
-    }
-
     free(toFree->cards);
     free(toFree);
+
+    write_to_log(cards_filename, "Destroyed a deck successfully.");
 
 }
 
@@ -100,9 +103,10 @@ void destroy_cards_in_deck(struct Deck * deck) {
  */
 void shuffle(struct Deck * deck) {
 
+    srand(time(NULL));
     int8_t i;
     for (i = 0; i < deck->currCard; i++) {
-        int r = rand() % deck->currCard;
+        int r = rand() % (deck->currCard + 1); //+1 because currCard is index
 
         struct Card * temp = deck->cards[r];
         deck->cards[r] = deck->cards[i];
@@ -122,6 +126,27 @@ struct Card * draw_card(struct Deck * deck) {
     }
 
     return deck->cards[deck->currCard--];
+}
+
+/**
+ * Draws a specific card given the index of that card in the deck
+ * returns the card on success and null on failure
+ */
+struct Card * draw_specific_card(struct Deck * deck, uint8_t index) {
+
+    if (deck->currCard < index) {
+        return NULL;
+    }
+
+    struct Card * card = deck->cards[index];
+
+    //swap card with one that is in play
+    deck->cards[index] = deck->cards[deck->currCard];
+    deck->cards[deck->currCard] = card;
+    deck->currCard--;
+
+    return card;
+
 }
 
 /**
@@ -191,6 +216,8 @@ void print_deck(struct Deck * toPrint) {
         printf("[%d]: ", i);
         print_card(toPrint->cards[i]);
     }
+
+    printf("--\n\n");
 
 }
 

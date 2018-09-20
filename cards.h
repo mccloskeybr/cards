@@ -56,6 +56,7 @@ void destroy_card(struct Card * toFree);
 struct Deck * construct_deck(int8_t maxCards);
 struct Deck * construct_std_deck();
 void destroy_deck(struct Deck * toFree);
+void destroy_cards_in_deck(struct Deck * deck);
 
 void shuffle(struct Deck * deck);
 struct Card * draw_card(struct Deck * deck);

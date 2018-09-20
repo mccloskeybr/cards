@@ -2,7 +2,7 @@
 #include "cards.h"
 #include "log.h"
 
-const char filename[] = "cards.c";
+const char cards_filename[] = "cards.c";
 
 /** ---------------- CON/DESTUCTORS ---------------- **/
 
@@ -68,9 +68,6 @@ struct Deck * construct_std_deck() {
 
 /**
  * Frees a deck struct
- *
- * TODO
- * move free_card somewhere else?
  */
 void destroy_deck(struct Deck * toFree) {
 
@@ -84,6 +81,16 @@ void destroy_deck(struct Deck * toFree) {
 
 }
 
+/**
+ * Frees all of the cards in the deck
+ * DOES NOT FREE DECK
+ */
+void destroy_cards_in_deck(struct Deck * deck) {
+    int8_t i;
+    for (i = 0; i < deck->maxCards; i++) {
+        destroy_card(deck->cards[i]);
+    }
+}
 
 
 /** ---------------- UTILITY ---------------- **/

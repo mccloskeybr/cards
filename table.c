@@ -47,6 +47,9 @@ void destroy_table(struct Table * toFree) {
     write_to_log(table_classname, "Destroyed a table successfully.");
 }
 
+/**
+ * Resets the table by freeing and constructing a new table
+ */
 void reset_table(struct Table * table) {
     uint8_t numHands = table->numHands;
 
@@ -82,5 +85,15 @@ void draw_hand_to_table(struct Table * table, uint8_t hand_index, uint8_t card_i
     place_card(table->onTable, draw_specific_card(table->hands[hand_index], card_index));
 
 }
+
+/**
+ * Places a card onto a specified hand from the table
+ */
+void draw_table_to_hand(struct Table * table, uint8_t hand_index, uint8_t card_index) {
+
+    place_card(table->hands[hand_index], draw_specific_card(table->onTable, card_index));
+
+}
+
 
 

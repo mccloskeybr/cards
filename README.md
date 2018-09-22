@@ -1,5 +1,5 @@
 # Cards
-The aim of this repository is to allow any card game the user(s) wish to play. Basic functionality includes:
+The aim of this repository is to support any card game (std. french deck) the user(s) wish to play. Basic functionality includes:
 
 - Drawing from the main deck to the table
 - Drawing from the main deck to a specified hand

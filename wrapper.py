@@ -81,14 +81,7 @@ class TableWrapperClass(object):
     def draw_table_to_hand(self, hand_index, card_index):
         return bool(_library.draw_table_to_hand(self.table, c_uint8(hand_index), c_uint8(card_index)))
 
-table = TableWrapperClass(1)
-_library.print_deck(table.table.contents.mainDeck)
-table.shuffle_main_deck()
-_library.print_deck(table.table.contents.mainDeck)
-table.draw_main_to_table()
-_library.print_deck(table.table.contents.mainDeck)
-_library.print_deck(table.table.contents.onTable)
-
-
+    def print_main(self):
+        _library.print_deck(self.table.contents.mainDeck)
 
 

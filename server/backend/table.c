@@ -1,3 +1,4 @@
+#include <string.h>
 #include "table.h"
 
 const char TABLE_classname[] = "table.c";
@@ -64,6 +65,10 @@ void reset_table() {
 void shuffle_main() {
     shuffle(TABLE->mainDeck);
     print_deck(TABLE->mainDeck);
+
+    char * test = calloc(1000, sizeof(char));
+    get_table_json(test);
+    free(test);
 }
 
 /** ---------------- UTILITY ---------------- **/
@@ -148,5 +153,34 @@ bool draw_table_to_hand(uint8_t hand_index, uint8_t card_index) {
     return true;
 
 }
+
+
+extern __declspec(dllexport) void get_table_json(char * buff) {
+    char * tempBuff = calloc(100, sizeof(char));
+
+    strcat(buff, "{");
+
+    sprintf(tempBuff, "\"numHands\" : %d,", TABLE->numHands);
+    strcat(buff, tempBuff);
+
+    sprintf(tempBuff, "\"mainDeck\" : [");
+    strcat(buff, tempBuff);
+    int i;
+    for (i = 0; i <= TABLE->mainDeck->currCard; i++) {
+        
+        Card * currCard = TABLE->mainDeck->cards[i];
+        sprintf(tempBuff, "%d ", currCard->rank);
+        strcpy(buff, tempBuff);
+        //suit_to_string(currCard, buff);
+
+        if (i != TABLE->mainDeck->currCard) {
+            strcat(buff, ",");
+        }
+    }
+
+    strcat(buff, "}");
+    printf(buff);
+}
+
 
 

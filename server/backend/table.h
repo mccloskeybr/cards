@@ -28,7 +28,6 @@ typedef struct {
 
 extern __declspec(dllexport) void construct_table(uint8_t numHands);
 extern __declspec(dllexport) void destroy_table();
-
 void reset_table();
 
 extern __declspec(dllexport) void shuffle_main();
@@ -36,5 +35,7 @@ bool draw_main_to_table();
 bool draw_main_to_hand(uint8_t index);
 bool draw_hand_to_table(uint8_t hand_index, uint8_t card_index);
 bool draw_table_to_hand(uint8_t hand_index, uint8_t card_index);
+
+extern __declspec(dllexport) void get_table_json(char * buff);
 
 #endif //table.h

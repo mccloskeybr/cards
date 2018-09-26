@@ -48,7 +48,7 @@ int main() {
         }
 
         else if (strcmp(cmd, "shuffle") == 0) {
-            shuffle(TABLE->mainDeck);
+            shuffle_main();
             printf("shuffled the main deck.\n");
         }
 

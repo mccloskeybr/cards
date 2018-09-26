@@ -40,3 +40,9 @@ class Button():
             pygame.draw.rect(self.screen, self.idle_color, (self.x, self.y, self.w, self.h))
 
 
+class Table():
+    def __init__(self, numHands):
+        self.table_wrapper = TableWrapperClass(numHands)
+        self.numHands = numHands
+
+

@@ -29,10 +29,10 @@ enum Suit {
  *  suit
  *  rank
 **/
-struct Card {
+typedef struct {
     enum Suit suit;
     uint8_t rank;
-};
+} Card;
 
 /**
  * Represents a deck objects (a collection of 52 cards)
@@ -41,32 +41,32 @@ struct Card {
  *  The currCard is the top of the stack, with bottom being
  *  currCard = 0 and top currCard = maxCards
 **/
-struct Deck {
-    struct Card ** cards;
+typedef struct {
+    Card ** cards;
     int8_t currCard;
     int8_t maxCards;
-};
+} Deck;
 
 
 
 
 //------------- FUNCTIONS --------------
 
-struct Card * construct_card(enum Suit suit, uint8_t rank);
-void destroy_card(struct Card * toFree);
-struct Deck * construct_deck(int8_t maxCards);
-struct Deck * construct_std_deck();
-void destroy_deck(struct Deck * toFree);
-void destroy_cards_in_deck(struct Deck * deck);
+Card * construct_card(enum Suit suit, uint8_t rank);
+void destroy_card(Card * toFree);
+Deck * construct_deck(int8_t maxCards);
+Deck * construct_std_deck();
+void destroy_deck(Deck * toFree);
+void destroy_cards_in_deck(Deck * deck);
 
-void shuffle(struct Deck * deck);
+extern __declspec(dllexport) void shuffle(Deck * deck);
 
-struct Card * draw_card(struct Deck * deck);
-struct Card * draw_specific_card(struct Deck * deck, uint8_t card_index);
-bool place_card(struct Deck * deck, struct Card * card);
+Card * draw_card(Deck * deck);
+Card * draw_specific_card(Deck * deck, uint8_t card_index);
+bool place_card(Deck * deck, Card * card);
 
-void suit_to_string(struct Card * card, char * buff);
-void print_card(struct Card * toPrint);
-void print_deck(struct Deck * toPrint);
+void suit_to_string(Card * card, char * buff);
+void print_card(Card * toPrint);
+void print_deck(Deck * toPrint);
 
 #endif //cards.h

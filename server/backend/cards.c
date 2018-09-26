@@ -9,9 +9,9 @@ const char cards_filename[] = "cards.c";
 /**
  * Generates a card given the suit and rank
  */
-struct Card * construct_card(enum Suit suit, uint8_t rank) {
+Card * construct_card(enum Suit suit, uint8_t rank) {
 
-    struct Card * card = malloc(sizeof(struct Card));
+    Card * card = malloc(sizeof(Card));
 
     card->suit = suit;
     card->rank = rank;
@@ -25,7 +25,7 @@ struct Card * construct_card(enum Suit suit, uint8_t rank) {
 /**
  * Frees a card struct
  */
-void destroy_card(struct Card * toFree) {
+void destroy_card(Card * toFree) {
 
     free(toFree);
 
@@ -36,13 +36,13 @@ void destroy_card(struct Card * toFree) {
 /**
  * Generates a non-shuffled deck of size NUMCARDS (default)
  */
-struct Deck * construct_deck(int8_t maxCards) {
+Deck * construct_deck(int8_t maxCards) {
 
-    struct Deck * deck = malloc(sizeof(struct Deck));
+    Deck * deck = malloc(sizeof(Deck));
 
     deck->currCard = -1;
     deck->maxCards = maxCards;
-    deck->cards = malloc(deck->maxCards * sizeof(struct Card *));
+    deck->cards = malloc(deck->maxCards * sizeof(Card *));
 
     write_to_log(cards_filename, "Constructed a deck successfully.");
 
@@ -53,9 +53,9 @@ struct Deck * construct_deck(int8_t maxCards) {
 /**
  * makes a standard french playing card set
  */
-struct Deck * construct_std_deck() {
+Deck * construct_std_deck() {
 
-    struct Deck * deck = construct_deck(52);
+    Deck * deck = construct_deck(52);
 
     enum Suit currSuit = 0;
     int8_t i;
@@ -75,7 +75,7 @@ struct Deck * construct_std_deck() {
 /**
  * Frees a deck struct
  */
-void destroy_deck(struct Deck * toFree) {
+void destroy_deck(Deck * toFree) {
 
     free(toFree->cards);
     free(toFree);
@@ -88,7 +88,7 @@ void destroy_deck(struct Deck * toFree) {
  * Frees all of the cards in the deck
  * DOES NOT FREE DECK
  */
-void destroy_cards_in_deck(struct Deck * deck) {
+void destroy_cards_in_deck(Deck * deck) {
     int8_t i;
     for (i = 0; i < deck->maxCards; i++) {
         destroy_card(deck->cards[i]);
@@ -101,14 +101,14 @@ void destroy_cards_in_deck(struct Deck * deck) {
 /**
  * Shuffles the deck randomly
  */
-void shuffle(struct Deck * deck) {
+extern __declspec(dllexport) void shuffle(Deck * deck) {
 
     srand(time(NULL));
     int8_t i;
     for (i = 0; i < deck->currCard; i++) {
         int r = rand() % (deck->currCard + 1); //+1 because currCard is index
 
-        struct Card * temp = deck->cards[r];
+        Card * temp = deck->cards[r];
         deck->cards[r] = deck->cards[i];
         deck->cards[i] = temp;
     }
@@ -119,7 +119,7 @@ void shuffle(struct Deck * deck) {
  * Draws the topmost card on the deck
  * returns null on failure and card on success
  */
-struct Card * draw_card(struct Deck * deck) {
+Card * draw_card(Deck * deck) {
     
     if (deck->currCard == -1) {
         return NULL;
@@ -132,13 +132,13 @@ struct Card * draw_card(struct Deck * deck) {
  * Draws a specific card given the index of that card in the deck
  * returns null on failure and card on success
  */
-struct Card * draw_specific_card(struct Deck * deck, uint8_t index) {
+Card * draw_specific_card(Deck * deck, uint8_t index) {
 
     if (deck->currCard < index) {
         return NULL;
     }
 
-    struct Card * card = deck->cards[index];
+    Card * card = deck->cards[index];
 
     //swap card with one that is in play
     deck->cards[index] = deck->cards[deck->currCard];
@@ -153,7 +153,7 @@ struct Card * draw_specific_card(struct Deck * deck, uint8_t index) {
  * places card into deck
  * returns true on successful placing
  */
-bool place_card(struct Deck * deck, struct Card * card) {
+bool place_card(Deck * deck, Card * card) {
     if (deck->currCard >= deck->maxCards) {
         return false;
     }
@@ -169,7 +169,7 @@ bool place_card(struct Deck * deck, struct Card * card) {
 /**
  * Puts the string version of the Suit enum
  */
-void suit_to_string(struct Card * card, char * buff) {
+void suit_to_string(Card * card, char * buff) {
 
     switch(card->suit) {
         case spades:
@@ -196,7 +196,7 @@ void suit_to_string(struct Card * card, char * buff) {
  * i.e.
  *  2 of Diamonds
  */
-void print_card(struct Card * toPrint) {
+void print_card(Card * toPrint) {
 
     char * suit_string = (char *) calloc(100, sizeof(char));
     suit_to_string(toPrint, suit_string);
@@ -210,7 +210,7 @@ void print_card(struct Card * toPrint) {
 /**
  * Prints all of the non played cards in the deck
  */
-void print_deck(struct Deck * toPrint) {
+void print_deck(Deck * toPrint) {
 
     int8_t i;
     for (i = 0; i <= toPrint->currCard; i++) {

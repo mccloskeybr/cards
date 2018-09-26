@@ -1,0 +1,2 @@
+
+csc -platform:x86 /out:server server.cs

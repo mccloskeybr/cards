@@ -7,19 +7,7 @@
 
 const char main_classname[] = "main.c";
 
-struct Table * TABLE;
-
-/**
- * Initializes any relevant fields
- */
-void init(uint8_t numHands) {
-
-    TABLE = construct_table(numHands);
-
-    write_to_log(main_classname, "Successfully initialized.");
-
-}
-
+extern Table * TABLE;
 
 /**
  * Contains the main program loop
@@ -27,7 +15,7 @@ void init(uint8_t numHands) {
  */
 int main() {
 
-    init(1);
+    construct_table(1);
 
     char cmd[100];
     bool quit = false;
@@ -55,7 +43,7 @@ int main() {
         }
 
         else if (strcmp(cmd, "reset_table") == 0) {
-            reset_table(TABLE);
+            reset_table();
             printf("reset the table.\n");
         }
 
@@ -91,7 +79,7 @@ int main() {
 
         else if (strcmp(cmd, "draw_main_to_table") == 0) {
 
-            draw_main_to_table(TABLE);
+            draw_main_to_table();
             print_deck(TABLE->onTable);
 
         }
@@ -103,7 +91,7 @@ int main() {
 
             if(index >= 0 && index < TABLE->numHands) {
                 
-                draw_main_to_hand(TABLE, index);
+                draw_main_to_hand(index);
                 print_deck(TABLE->hands[index]);
 
             }
@@ -122,7 +110,7 @@ int main() {
             if (hand_index >= 0 && hand_index < TABLE->numHands && \
                 card_index >= 0 && card_index <= TABLE->hands[hand_index]->currCard) {
 
-                draw_hand_to_table(TABLE, hand_index, card_index);
+                draw_hand_to_table(hand_index, card_index);
                 print_deck(TABLE->onTable);
 
             }
@@ -143,7 +131,7 @@ int main() {
             if (hand_index >= 0 && hand_index < TABLE->numHands && \
                 card_index >= 0 && card_index <= TABLE->onTable->currCard) {
 
-                draw_table_to_hand(TABLE, hand_index, card_index);
+                draw_table_to_hand(hand_index, card_index);
                 print_deck(TABLE->hands[hand_index]);
 
             }

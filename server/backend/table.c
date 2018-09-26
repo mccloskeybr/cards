@@ -64,11 +64,6 @@ void reset_table() {
  */
 void shuffle_main() {
     shuffle(TABLE->mainDeck);
-    print_deck(TABLE->mainDeck);
-
-    char * test = calloc(1000, sizeof(char));
-    get_table_json(test);
-    free(test);
 }
 
 /** ---------------- UTILITY ---------------- **/
@@ -154,32 +149,88 @@ bool draw_table_to_hand(uint8_t hand_index, uint8_t card_index) {
 
 }
 
+/**
+ * Creates a deck json, starting from [
+ * e.g. [ "12 hearts, 13 clubs, ... ]
+ */
+void put_deck_json(char * buff, Deck * deck) {
+    char * tempBuff = calloc(20, sizeof(char));
 
-extern __declspec(dllexport) void get_table_json(char * buff) {
-    char * tempBuff = calloc(100, sizeof(char));
+    strcat(buff, "[");
+
+    int i;
+    for (i = 0; i <= deck->currCard; i++) {
+        
+        Card * currCard = deck->cards[i];
+        sprintf(tempBuff, "\"%d ", currCard->rank);
+        switch(currCard->suit) {
+            case hearts:
+                strcat(tempBuff, "hearts");
+                break;
+            case diamonds:
+                strcat(tempBuff, "diamonds");
+                break;
+            case spades:
+                strcat(tempBuff, "spades");
+                break;
+            case clubs:
+                strcat(tempBuff, "clubs");
+                break;
+            default:
+                strcat(tempBuff, "ERR");
+                break;
+        }
+        strcat(tempBuff, "\"");
+
+        if (i != TABLE->mainDeck->currCard) {
+            strcat(tempBuff, ",");
+        }
+        strcat(buff, tempBuff);
+    }
+
+    strcat(buff, "]");
+
+    free(tempBuff);
+}
+
+/**
+ * Creates a table json with information of all decks
+ */
+extern __declspec(dllexport) void put_table_json(char * buff) {
+    char * tempBuff = calloc(30, sizeof(char));
 
     strcat(buff, "{");
 
     sprintf(tempBuff, "\"numHands\" : %d,", TABLE->numHands);
     strcat(buff, tempBuff);
 
-    sprintf(tempBuff, "\"mainDeck\" : [");
-    strcat(buff, tempBuff);
-    int i;
-    for (i = 0; i <= TABLE->mainDeck->currCard; i++) {
-        
-        Card * currCard = TABLE->mainDeck->cards[i];
-        sprintf(tempBuff, "%d ", currCard->rank);
-        strcpy(buff, tempBuff);
-        //suit_to_string(currCard, buff);
+    strcat(buff, "\"mainDeck\" : ");
+    put_deck_json(buff, TABLE->mainDeck);
+    strcat(buff, ",");
 
-        if (i != TABLE->mainDeck->currCard) {
+    strcat(buff, "\"onTable\" : ");
+    put_deck_json(buff, TABLE->onTable);
+    strcat(buff, ",");
+
+
+    strcat(buff, "\"hands\": [");
+    int i;
+    for (i = 0; i < TABLE->numHands; i++) {
+        sprintf(tempBuff, "{\"id\" : %d, \"cards\" :", i);
+        strcat(buff, tempBuff);
+        put_deck_json(buff, TABLE->hands[i]);
+        strcat(buff, "}");
+
+        if (i != TABLE->numHands - 1) {
             strcat(buff, ",");
         }
     }
+    strcat(buff, "]");
 
     strcat(buff, "}");
     printf(buff);
+
+    free(tempBuff);
 }
 
 

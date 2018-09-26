@@ -59,7 +59,7 @@ Deck * construct_std_deck();
 void destroy_deck(Deck * toFree);
 void destroy_cards_in_deck(Deck * deck);
 
-extern __declspec(dllexport) void shuffle(Deck * deck);
+void shuffle(Deck * deck);
 
 Card * draw_card(Deck * deck);
 Card * draw_specific_card(Deck * deck, uint8_t card_index);

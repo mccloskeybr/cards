@@ -101,7 +101,7 @@ void destroy_cards_in_deck(Deck * deck) {
 /**
  * Shuffles the deck randomly
  */
-extern __declspec(dllexport) void shuffle(Deck * deck) {
+void shuffle(Deck * deck) {
 
     srand(time(NULL));
     int8_t i;

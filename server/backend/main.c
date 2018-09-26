@@ -15,7 +15,7 @@ extern Table * TABLE;
  */
 int main() {
 
-    construct_table(1);
+    construct_table(4);
 
     char cmd[100];
     bool quit = false;

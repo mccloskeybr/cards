@@ -15,7 +15,7 @@ To run, simply execute ```./main``` in the same directory.
 There is a set of predetermined commands that can be run. While running the program, execute ```help``` to see more.
 
 
-### C# Server with Python Frontend (local only)
+### C# Server with C Backend and Python Frontend (local only)
 To compile, navigate to backend/ and execute ```make library```. Place the resulting .so file in server/CardsServer/bin.
 Start the server by running the C# program from within visual studio. Note the port. You'll either have to change this to the current default 56785 or change
 the hardcoded port num in request.py.

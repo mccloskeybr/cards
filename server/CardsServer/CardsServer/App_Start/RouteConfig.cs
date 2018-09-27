@@ -24,6 +24,14 @@ namespace CardsServer
             );
 
             routes.MapRoute(
+                "Register", "api/register", new { controller = "Server", action = "registerNewPlayer" }
+            );
+
+            routes.MapRoute(
+                "Unregister", "api/unregister/{id}", new { controller = "Server", action = "unregisterPlayer" }
+            );
+
+            routes.MapRoute(
                 "Reset", "api/reset", new { controller = "Server", action = "reset" }
             );
 
@@ -32,11 +40,11 @@ namespace CardsServer
             );
 
             routes.MapRoute(
-                "DrawMainToTable", "api/draw_main_to_table/{index}", new { controller = "Server", action = "drawMainToTable" }
+                "DrawMainToTable", "api/draw_main_to_table", new { controller = "Server", action = "drawMainToTable" }
             );
 
             routes.MapRoute(
-                "DrawMainToHand", "api/draw_main_to_table/{hand_index}/{card_index}", new { controller = "Server", action = "drawMainToHand" }
+                "DrawMainToHand", "api/draw_main_to_hand/{index}", new { controller = "Server", action = "drawMainToHand" }
             );
 
             routes.MapRoute(

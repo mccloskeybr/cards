@@ -182,7 +182,7 @@ void put_deck_json(char * buff, Deck * deck) {
         }
         strcat(tempBuff, "\"");
 
-        if (i != TABLE->mainDeck->currCard) {
+        if (i != deck->currCard) {
             strcat(tempBuff, ",");
         }
         strcat(buff, tempBuff);

@@ -36,7 +36,8 @@ namespace CardServer.Controllers
         [DllImport("cards_backend.so", CallingConvention = CallingConvention.Cdecl)]
         static extern void put_table_json(byte[] buff);
 
-        static private bool active = false;
+        private static bool active = false;
+        private static bool[] playerSlots = new bool[4];
 
         // GET api/start
         public bool start()
@@ -69,6 +70,33 @@ namespace CardServer.Controllers
         public bool healthcheck()
         {
             return true;
+        }
+
+        // GET api/register
+        public string registerNewPlayer()
+        {
+            for (int i = 0; i < playerSlots.Length; i++)
+            {
+                if (playerSlots[i] == false)
+                {
+                    playerSlots[i] = true;
+                    return i.ToString();
+                }
+            }
+
+            return (-1).ToString();
+        }
+
+        // GET api/unregister/{id}
+        public bool unregisterPlayer(int id)
+        {
+            if (playerSlots[id] == true)
+            {
+                playerSlots[id] = false;
+                return true;
+            }
+
+            return false;
         }
 
         // GET api/reset
@@ -140,9 +168,9 @@ namespace CardServer.Controllers
         {
             if (active)
             {
-                byte[] buff = new byte[1000];
+                byte[] buff = new byte[760];
                 put_table_json(buff);
-                return System.Text.Encoding.Default.GetString(buff);
+                return "" + System.Text.Encoding.Default.GetString(buff).TrimEnd('\0');
             }
             return "ERR: Game not active.";
         }

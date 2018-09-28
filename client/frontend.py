@@ -1,21 +1,34 @@
 import pygame
 import json
 import main
+import request
 
 color = {
-    'white' : (255, 255, 255),
     'black' : (0, 0, 0),
     'red'   : (255, 0, 0),
-    'blue'  : (0, 0, 255),
     'green' : (0, 255, 0),
-    'purple': (255, 0, 255),
-    'orange': (255, 127, 0)
 }
 
-card_images = None
 CARD_W = 140
 CARD_H = 200
 
+SELECTED_CARD = None    # the current card being dragged around
+
+# loads all relevant card images
+card_images = {}
+card_images['back'] = pygame.transform.scale(pygame.image.load('./res/card_imgs/back.png'), (CARD_W, CARD_H))
+suits = ['spades', 'clubs', 'hearts', 'diamonds']
+for i in range(1, 14):
+    for suit in suits:
+        key = str(i) + ' ' + suit
+        card_images[key] = pygame.image.load('./res/card_imgs/' + str(i) + '_of_' + suit + '.png')
+        card_images[key] = pygame.transform.scale(card_images[key], (CARD_W, CARD_H))
+
+'''
+Class representing a button. Ensures that a button press will call
+action function exactly once per click.
+
+'''
 class Button():
     def __init__(self, screen, x, y, w, h, idle_color, active_color, text, action=None):
         self.screen = screen
@@ -60,78 +73,194 @@ class Button():
         self.screen.blit(textSurface, (self.x, self.y))
 
 
-class Table():
-    def __init__(self, screen, playerId):
+'''
+Class representing a single card. Keeps track of all rendering AND
+selection information -- when a card is clicked, this class captures that
+action.
+
+'''
+class Card():
+    def __init__(self, screen, deck, img_key, show, rot, draw_horiz, x, y, click_w):
         self.screen = screen
-        self.playerId = playerId
-        self.hands = [[], [], [], []]
-        self.mainDeck = []
-        self.onTable = []
+        self.deck = deck
+        self.img = card_images[img_key]
+        self.back_img = card_images['back']
+        self.show = show
+        self.rot = rot
+
+        # location specifics of card in relation to rest of deck
+        self.x = x
+        self.y = y
+        self.w = CARD_W
+        self.h = CARD_H
+
+        # render specifics of card -- if card is clicked and dragged
+        self.render_x = self.x
+        self.render_y = self.y
+        if draw_horiz:              # click box of card diff depending on orientation
+            self.click_w = click_w
+            self.click_h = self.h   
+        else:
+            self.click_w = self.w
+            self.click_h = click_w
+
+    # checks to see if the card has been selected. if so, have card follow mouse
+    def check(self):
+        global SELECTED_CARD
+        mouse = pygame.mouse.get_pos()
+        click = pygame.mouse.get_pressed()
+
+        # was selected and user let go of button
+        # TODO: place on table or hand depending on where mouse coords are
+        if SELECTED_CARD == self and click[0] == 0:
+            self.render_x = self.x
+            self.render_y = self.y
+            SELECTED_CARD = None
+
+        # user is currently dragging the card
+        elif SELECTED_CARD == self and click[0] == 1:
+            self.render_x = mouse[0] - self.w / 2
+            self.render_y = mouse[1] - self.h / 2
+
+        # user clicks the card
+        elif SELECTED_CARD == None and click[0] == 1 and SELECTED_CARD == None \
+                and self.x < mouse[0] < self.x + self.click_w \
+                and self.y < mouse[1] < self.y + self.click_h:
+            SELECTED_CARD = self
+
+    # renders the card
+    def render(self):
+        if self.show:
+            self.screen.blit(pygame.transform.rotate(self.img, self.rot), (self.render_x, self.render_y))
+        else:
+            self.screen.blit(pygame.transform.rotate(self.back_img, self.rot), (self.render_x, self.render_y))
+
+
+'''
+Deck class. Manages a set of card objects.
+Management includes mass checking and rendering of cards.
+
+'''
+class Deck():
+    def __init__(self, screen, show, rot, x_mid, y_mid):
+        self.cards = []
+        self.screen = screen
+        self.show = show
+        self.rot = rot
+        self.x_mid = x_mid
+        self.y_mid = y_mid
+
+    # Updates the cards given an array of card keys (from table JSON)
+    def set_cards(self, cards):
+        self.cards = [] #TODO: Make more efficient
+
+        # spacer between consecutive cards in a hand
+        spacer = 30
+        full_deck_width = (len(cards) - 1) * spacer + CARD_W
+        
+        # draw horizontally if even (if rotation is 0 or 180)
+        draw_horiz = ((self.rot/90) % 2 == 0)
+
+        # if draw horizontally, the y value is constant and x value changes
+        if draw_horiz:
+            static_coord = self.y_mid
+            variable_coord = self.x_mid - full_deck_width/2
+        # if draw vertically, the x value is constant and y value changes
+        else:
+            static_coord = self.x_mid
+            variable_coord = self.y_mid - full_deck_width/2
+
+        for card_key in cards:
+            if draw_horiz:
+                self.cards.append(Card(self.screen, self, card_key, self.show, self.rot, True, variable_coord, static_coord, spacer))   #TODO last card click_w is CARD_W or CARD_H not spacer
+            else:
+                self.cards.append(Card(self.screen, self, card_key, self.show, self.rot, False, static_coord, variable_coord, spacer))
+
+            variable_coord += spacer
+
+    # Checks all cards
+    def check(self):
+        for card in self.cards:
+            card.check()
+
+    # Renders all cards
+    def render(self):
+        for card in self.cards:
+            card.render()
+
+
+'''
+Table class. Keeps track of relevant deck objects.
+Hands are kept consistent (in circular shape around table) via. player_id (given from server).
+Deck objects are updated via. json object retrieved from server.
+
+'''
+class Table():
+    def __init__(self, screen, player_id):
+        self.screen = screen
+        self.player_id = player_id
         self.json = ""
 
+        self.mainDeck = Deck(screen, False, 0, 0, -100)
+        self.onTable = Deck(screen, True, 0, main.GAME_WIDTH/2, main.GAME_HEIGHT/2 - 100)
+        self.hands = []
+        for i in range(0, 4):
+            # space between hand and edge of screen
+            opponent_hand_spacer = 40
+
+            # following checks ensure circular positioning of hands around table
+            pos = (i - self.player_id) % 4
+            if pos == 0:
+                self.hands.append(Deck(screen, True, 0, main.GAME_WIDTH/2, main.GAME_HEIGHT - CARD_H - 10))
+            elif pos == 1:
+                self.hands.append(Deck(screen, False, 90, main.GAME_WIDTH - opponent_hand_spacer, main.GAME_HEIGHT / 2))
+            elif pos == 2:
+                self.hands.append(Deck(screen, False, 180, main.GAME_WIDTH/2, -CARD_H + opponent_hand_spacer))
+            elif pos == 3:
+                self.hands.append(Deck(screen, False, 270, -CARD_H + opponent_hand_spacer, main.GAME_HEIGHT/2))
+
     # updates the object iff the json input is different from the stored json
-    def update(self, json_str):
+    def load_json(self, json_str):
         if self.json != json_str:
             self.json = json_str
             parsed_json = json.loads(json_str)
 
+            self.mainDeck.set_cards(parsed_json['mainDeck'])
+            self.onTable.set_cards(parsed_json['onTable'])
             for i in range(len(parsed_json['hands'])):
-                self.hands[parsed_json['hands'][i]['id']] = parsed_json['hands'][i]['cards']
+                self.hands[parsed_json['hands'][i]['id']].set_cards(parsed_json['hands'][i]['cards'])
 
-            self.mainDeck = parsed_json['mainDeck']
-            self.onTable = parsed_json['onTable']
+    # checks all relevant decks. also handles when a selected card is unselected.
+    def check(self):
+        global SELECTED_CARD
+        mouse = pygame.mouse.get_pos()
+        click = pygame.mouse.get_pressed()
 
-    # renders a given deck with x midpoint and y
-    def _render_deck_vert(self, deck, rot, show, x, y_mid):
-        y_spacer = 30
-        full_hand_height = (len(deck) - 1) * y_spacer + CARD_W  # CARD_W because rotated 90 degrees, height is actually width of card
+        # capture letting go of card before its passed to decks
+        if click[0] == 0 and SELECTED_CARD != None:
+            dist_to_table = ((mouse[0] - self.onTable.x_mid)**2 + (mouse[1] - self.onTable.y_mid)**2)**(0.5)
+            dist_to_hand  = ((mouse[0] - self.hands[self.player_id].x_mid)**2 + (mouse[1] - self.hands[self.player_id].y_mid)**2)**(0.5)
 
-        y = y_mid - full_hand_height/2
-        for i in range(len(deck)):
-            if show:
-                self.screen.blit(pygame.transform.rotate(card_images[deck[i]], rot), (x, y))
-            else:
-                self.screen.blit(pygame.transform.rotate(card_images['back'], rot), (x, y))
+            if dist_to_table < dist_to_hand and SELECTED_CARD.deck == self.hands[self.player_id]:
+                request.draw_hand_to_table(self.player_id, self.hands[self.player_id].cards.index(SELECTED_CARD))
 
-            y += y_spacer
+            elif dist_to_table > dist_to_hand and SELECTED_CARD.deck == self.onTable:
+                request.draw_table_to_hand(self.player_id, self.onTable.cards.index(SELECTED_CARD))
 
-    # renders a given deck with x midpoint and y
-    def _render_deck_horiz(self, deck, rot, show, x_mid, y):
-        x_spacer = 30
-        full_hand_width = (len(deck) - 1) * x_spacer + CARD_W
-
-        x = x_mid - full_hand_width/2
-        for i in range(len(deck)):
-            if show:
-                self.screen.blit(pygame.transform.rotate(card_images[deck[i]], rot), (x, y))
-            else:
-                self.screen.blit(pygame.transform.rotate(card_images['back'], rot), (x, y))
-
-            x += x_spacer
+        # tell decks to check status of their cards
+        self.onTable.check()
+        self.hands[self.player_id].check()
 
     # renders all relevant decks
     def render(self):
-        if card_images == None:
-            load_card_imgs()
+        global SELECTED_CARD
+        
+        self.onTable.render()
+        for hand in self.hands:
+            hand.render()
 
-        self._render_deck_horiz(self.onTable, 0, True, main.GAME_WIDTH/2, main.GAME_HEIGHT/2 - CARD_H/2)
-        self._render_deck_horiz(self.hands[self.playerId], 0, True, main.GAME_WIDTH/2, main.GAME_HEIGHT - CARD_H - 20)
-
-        self._render_deck_vert(self.hands[(self.playerId + 1) % 4], 90, False, main.GAME_WIDTH - 40, main.GAME_HEIGHT/2)
-        self._render_deck_horiz(self.hands[(self.playerId + 2) % 4], 180, False, main.GAME_WIDTH/2, -CARD_H + 40)
-        self._render_deck_vert(self.hands[(self.playerId + 3) % 4], 270, False, -CARD_H + 40, main.GAME_HEIGHT/2)
-
-
-
-def load_card_imgs():
-    global card_images
-    card_images = {}
-    card_images['back'] = pygame.transform.scale(pygame.image.load('./res/card_imgs/back.png'), (CARD_W, CARD_H))
-    suits = ['spades', 'clubs', 'hearts', 'diamonds']
-    for i in range(1, 14):
-        for suit in suits:
-            key = str(i) + ' ' + suit
-            card_images[key] = pygame.image.load('./res/card_imgs/' + str(i) + '_of_' + suit + '.png')
-            card_images[key] = pygame.transform.scale(card_images[key], (CARD_W, CARD_H))
+        # ensure selected card is rendered on top
+        if SELECTED_CARD != None:
+            SELECTED_CARD.render()
 
 

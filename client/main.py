@@ -43,7 +43,8 @@ def game_loop():
             if event.type == pygame.QUIT:
                 quit = True
 
-        table.update(request.get_table_json())
+        table.load_json(request.get_table_json())
+        table.check()
 
         screen.fill(frontend.color['black'])
 

@@ -48,7 +48,7 @@ Enter in the server box localhost:xxxx and click submit.
 
 ### AWS/EC2 Hosted
 Start a EC2 instance (Windows Server 2012 Base ami) with RDP (3389), HTTP (80), and web deployment (8172) ports open.
-The HTTP port needs to be universal to allow anyone to connect to the main server and achieved the desired functionality.
+The HTTP port needs to be universal to allow anyone to connect to the main server and achieve the desired functionality.
 Log in and set up remote publishing and web. If inexperienced with this, you may find links like:
 
 http://www.tothenew.com/blog/deploy-asp-net-application-on-amazon-ec2/

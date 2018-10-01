@@ -3,12 +3,6 @@ import json
 import main
 import request
 
-color = {
-    'black' : (0, 0, 0),
-    'red'   : (255, 0, 0),
-    'green' : (0, 255, 0),
-}
-
 CARD_W = 140
 CARD_H = 200
 
@@ -23,54 +17,6 @@ for i in range(1, 14):
         key = str(i) + ' ' + suit
         card_images[key] = pygame.image.load('./res/card_imgs/' + str(i) + '_of_' + suit + '.png')
         card_images[key] = pygame.transform.scale(card_images[key], (CARD_W, CARD_H))
-
-'''
-Class representing a button. Ensures that a button press will call
-action function exactly once per click.
-
-'''
-class Button():
-    def __init__(self, screen, x, y, w, h, idle_color, active_color, text, action=None):
-        self.screen = screen
-        self.x = x
-        self.y = y
-        self.w = w
-        self.h = h
-        self.idle_color = idle_color
-        self.active_color = active_color
-        self.text = text
-        self.action = action
-        self.active = False
-
-    # checks to see if the button is being clicked -- if so, do action
-    def check(self):
-        mouse = pygame.mouse.get_pos()
-        click = pygame.mouse.get_pressed()
-
-        # button is active and click false
-        if self.active and click[0] == 0:
-            self.active = False
-
-        # button is not active and click true
-        elif not self.active \
-                and click[0] == 1 \
-                and self.x + self.w > mouse[0] > self.x \
-                and self.y + self.h > mouse[1] > self.y:
-
-            self.active = True
-            if self.action is not None:
-                self.action()
-
-    # renders the button in the correct color
-    def render(self):
-        if self.active:
-            pygame.draw.rect(self.screen, color[self.active_color], (self.x, self.y, self.w, self.h))
-        else:
-            pygame.draw.rect(self.screen, color[self.idle_color], (self.x, self.y, self.w, self.h))
-
-        font = pygame.font.SysFont("Comic Sans MS", 16)
-        textSurface = font.render(self.text, False, (0, 0, 0))
-        self.screen.blit(textSurface, (self.x, self.y))
 
 
 '''
@@ -142,21 +88,20 @@ Management includes mass checking and rendering of cards.
 
 '''
 class Deck():
-    def __init__(self, screen, show, rot, x_mid, y_mid):
+    def __init__(self, screen, show, rot, x_mid, y_mid, spacer):
         self.cards = []
         self.screen = screen
         self.show = show
         self.rot = rot
         self.x_mid = x_mid
         self.y_mid = y_mid
+        self.spacer = spacer
 
     # Updates the cards given an array of card keys (from table JSON)
     def set_cards(self, cards):
         self.cards = [] #TODO: Make more efficient
 
-        # spacer between consecutive cards in a hand
-        spacer = 30
-        full_deck_width = (len(cards) - 1) * spacer + CARD_W
+        full_deck_width = (len(cards) - 1) * self.spacer + CARD_W
         
         # draw horizontally if even (if rotation is 0 or 180)
         draw_horiz = ((self.rot/90) % 2 == 0)
@@ -170,13 +115,21 @@ class Deck():
             static_coord = self.x_mid
             variable_coord = self.y_mid - full_deck_width/2
 
-        for card_key in cards:
+        for i in range(len(cards)):
+            card_key = cards[i]
             if draw_horiz:
-                self.cards.append(Card(self.screen, self, card_key, self.show, self.rot, True, variable_coord, static_coord, spacer))   #TODO last card click_w is CARD_W or CARD_H not spacer
-            else:
-                self.cards.append(Card(self.screen, self, card_key, self.show, self.rot, False, static_coord, variable_coord, spacer))
+                if i == len(cards) - 1:
+                    self.cards.append(Card(self.screen, self, card_key, self.show, self.rot, True, variable_coord, static_coord, CARD_W))
+                else:
+                    self.cards.append(Card(self.screen, self, card_key, self.show, self.rot, True, variable_coord, static_coord, self.spacer)) 
 
-            variable_coord += spacer
+            else:
+                if i == len(cards) - 1:
+                    self.cards.append(Card(self.screen, self, card_key, self.show, self.rot, False, static_coord, variable_coord, CARD_W))
+                else:
+                    self.cards.append(Card(self.screen, self, card_key, self.show, self.rot, False, static_coord, variable_coord, self.spacer))
+
+            variable_coord += self.spacer
 
     # Checks all cards
     def check(self):
@@ -201,8 +154,8 @@ class Table():
         self.player_id = player_id
         self.json = ""
 
-        self.mainDeck = Deck(screen, False, 0, 0, -100)
-        self.onTable = Deck(screen, True, 0, main.GAME_WIDTH/2, main.GAME_HEIGHT/2 - 100)
+        self.mainDeck = Deck(screen, False, 0, main.GAME_WIDTH/2, main.GAME_HEIGHT/2 - CARD_H - 75, 5)
+        self.onTable = Deck(screen, True, 0, main.GAME_WIDTH/2, main.GAME_HEIGHT/2 - 50, 30)
         self.hands = []
         for i in range(0, 4):
             # space between hand and edge of screen
@@ -211,13 +164,13 @@ class Table():
             # following checks ensure circular positioning of hands around table
             pos = (i - self.player_id) % 4
             if pos == 0:
-                self.hands.append(Deck(screen, True, 0, main.GAME_WIDTH/2, main.GAME_HEIGHT - CARD_H - 10))
+                self.hands.append(Deck(screen, True, 0, main.GAME_WIDTH/2, main.GAME_HEIGHT - CARD_H - 10, 30))
             elif pos == 1:
-                self.hands.append(Deck(screen, False, 90, main.GAME_WIDTH - opponent_hand_spacer, main.GAME_HEIGHT / 2))
+                self.hands.append(Deck(screen, False, 90, main.GAME_WIDTH - opponent_hand_spacer, main.GAME_HEIGHT / 2, 30))
             elif pos == 2:
-                self.hands.append(Deck(screen, False, 180, main.GAME_WIDTH/2, -CARD_H + opponent_hand_spacer))
+                self.hands.append(Deck(screen, False, 180, main.GAME_WIDTH/2, -CARD_H + opponent_hand_spacer, 30))
             elif pos == 3:
-                self.hands.append(Deck(screen, False, 270, -CARD_H + opponent_hand_spacer, main.GAME_HEIGHT/2))
+                self.hands.append(Deck(screen, False, 270, -CARD_H + opponent_hand_spacer, main.GAME_HEIGHT/2, 30))
 
     # updates the object iff the json input is different from the stored json
     def load_json(self, json_str):
@@ -255,6 +208,7 @@ class Table():
     def render(self):
         global SELECTED_CARD
         
+        self.mainDeck.render()
         self.onTable.render()
         for hand in self.hands:
             hand.render()

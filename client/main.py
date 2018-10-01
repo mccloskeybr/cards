@@ -1,9 +1,12 @@
 import pygame
 import request
 import frontend
+import forms
 
 GAME_WIDTH = 780
 GAME_HEIGHT = 780
+SCREEN = None
+CLOCK = None
 
 MAX_TICKS_PER_SECOND = 60
 
@@ -19,26 +22,20 @@ Contains main game loop
 
 '''
 def game_loop():
-    global player_id
-
-    pygame.init()
-    pygame.font.init()
-
-    screen = pygame.display.set_mode([GAME_WIDTH, GAME_HEIGHT])
-    clock = pygame.time.Clock()
+    global player_id, SCREEN, CLOCK
 
     buttons = [
-            frontend.Button(screen, 10, 20, 100, 40, 'red', 'green', 'Reset', request.reset),
-            frontend.Button(screen, 10, 70, 100, 40, 'red', 'green', 'Shuffle', request.shuffle),
-            frontend.Button(screen, 10, 120, 100, 40, 'red', 'green', 'MainToTable', request.draw_main_to_table),
-            frontend.Button(screen, 10, 170, 100, 40, 'red', 'green', 'MainToHand', draw_main_to_hand)
+            forms.Button(SCREEN, 10, 20, 100, 40, 'red', 'green', 'Reset', request.reset),
+            forms.Button(SCREEN, 10, 70, 100, 40, 'red', 'green', 'Shuffle', request.shuffle),
+            forms.Button(SCREEN, 10, 120, 100, 40, 'red', 'green', 'MainToTable', request.draw_main_to_table),
+            forms.Button(SCREEN, 10, 170, 100, 40, 'red', 'green', 'MainToHand', draw_main_to_hand)
     ]
 
-    table = frontend.Table(screen, player_id)
+    table = frontend.Table(SCREEN, player_id)
 
     quit = False
     while not quit:
-        clock.tick(MAX_TICKS_PER_SECOND)
+        CLOCK.tick(MAX_TICKS_PER_SECOND)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 quit = True
@@ -46,10 +43,10 @@ def game_loop():
         table.load_json(request.get_table_json())
         table.check()
 
-        screen.fill(frontend.color['black'])
+        SCREEN.fill(forms.colors['black'])
 
         for button in buttons:
-            button.check()
+            button.update()
             button.render()
 
         table.render()
@@ -61,23 +58,57 @@ def game_loop():
 
 
 '''
-Run pre-game checks and register with main gameserv
+initializes global variables. makes initial check in with server and registers
+the current player if the server allows it.
 
 '''
 def init():
-    global player_id
+    global player_id, SCREEN, CLOCK
 
-    # ensure server is running
-    if request.healthcheck() != 'True':
-        print 'Server not running. Aborting.'
-        quit()
+    pygame.init()
+    pygame.font.init()
 
-    # register new player with server
-    while player_id == -1:
-        player_id = int(request.register())
-        print 'Waiting to register...'
-    print 'Registered!'
+    SCREEN = pygame.display.set_mode([GAME_WIDTH, GAME_HEIGHT])
+    CLOCK = pygame.time.Clock()
 
+    submit = forms.Button(SCREEN, 10, 20, 100, 40, 'red', 'green', 'Submit', None)
+    display_name = forms.InputBox(SCREEN, 10, 70, 200, 30, 'red', 'green', 20, 'Name')
+    server_name = forms.InputBox(SCREEN, 10, 110, 500, 30, 'red', 'green', 45, 'Server')
+
+    accepted = False
+    while not accepted:
+
+        CLOCK.tick(MAX_TICKS_PER_SECOND)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+            display_name.update(event)
+            server_name.update(event)
+        
+        submit.update()
+
+        if submit.active == True:
+            submit.active = False
+            if request.attempt_connect(server_name.text.encode('ascii')) == True:
+                player_id = int(request.register())
+                if player_id != -1:
+                    accepted = True
+                else:
+                    server_name.text = 'Server full!'
+
+            else:
+                print server_name.text
+                server_name.text = 'Invalid server'
+
+        SCREEN.fill(forms.colors['black'])
+
+        display_name.render()
+        server_name.render()
+        submit.render()
+
+        pygame.display.flip()
 
 
 '''

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Web;
 using System.Web.Mvc;
+using Aws.GameLift.Server;
+using CardsServer.App_Data;
 
 namespace CardServer.Controllers
 {
@@ -45,7 +47,6 @@ namespace CardServer.Controllers
             if (!active)
             {
                 construct_table(4);
-                shuffle_main();
                 active = true;
                 return true;
             }
@@ -60,6 +61,7 @@ namespace CardServer.Controllers
             {
                 destroy_table();
                 active = false;
+
                 return true;
             }
 
@@ -73,7 +75,7 @@ namespace CardServer.Controllers
         }
 
         // GET api/register
-        public string registerNewPlayer()
+        public string registerNewPlayer(String playerSessionId)
         {
             for (int i = 0; i < playerSlots.Length; i++)
             {

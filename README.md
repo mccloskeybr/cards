@@ -60,5 +60,10 @@ Start the game by visiting your EC2 instance's public dns + /api/start. i.e.:
 
 ec2-xx-xxx-xxx-xxx.compute-1.amazonaws.com/api/start
 
-When connecting from the python client, put the EC2 instance's public dns in as the server dest and click submit.
+To run, from client, execute:
+```sh
+python main.py
+```
+
+Enter the EC2 instance's public dns in the server box and click submit.
 

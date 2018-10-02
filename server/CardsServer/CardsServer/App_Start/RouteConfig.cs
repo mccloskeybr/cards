@@ -24,7 +24,7 @@ namespace CardsServer
             );
 
             routes.MapRoute(
-                "Register", "api/register", new { controller = "Server", action = "registerNewPlayer" }
+                "Register", "api/register/{displayName}", new { controller = "Server", action = "registerNewPlayer" }
             );
 
             routes.MapRoute(
@@ -57,6 +57,10 @@ namespace CardsServer
 
             routes.MapRoute(
                 "TableJSON", "api/table", new { controller = "Server", action = "getTableJson" }
+            );
+
+            routes.MapRoute(
+                "DisplayNamesJSON", "api/displaynames", new { controller = "Server", action = "getDisplayNamesJson" }
             );
 
         }

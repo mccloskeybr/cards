@@ -39,7 +39,7 @@ namespace CardServer.Controllers
         static extern void put_table_json(byte[] buff);
 
         private static bool active = false;
-        private static bool[] playerSlots = new bool[4];
+        private static string[] playerSlots = new string[4];
 
         // GET api/start
         public bool start()
@@ -75,13 +75,13 @@ namespace CardServer.Controllers
         }
 
         // GET api/register
-        public string registerNewPlayer(String playerSessionId)
+        public string registerNewPlayer(String displayName)
         {
             for (int i = 0; i < playerSlots.Length; i++)
             {
-                if (playerSlots[i] == false)
+                if (playerSlots[i] == null)
                 {
-                    playerSlots[i] = true;
+                    playerSlots[i] = displayName;
                     return i.ToString();
                 }
             }
@@ -92,9 +92,9 @@ namespace CardServer.Controllers
         // GET api/unregister/{id}
         public bool unregisterPlayer(int id)
         {
-            if (playerSlots[id] == true)
+            if (playerSlots[id] != null)
             {
-                playerSlots[id] = false;
+                playerSlots[id] = null;
                 return true;
             }
 
@@ -173,6 +173,35 @@ namespace CardServer.Controllers
                 byte[] buff = new byte[760];
                 put_table_json(buff);
                 return "" + System.Text.Encoding.Default.GetString(buff).TrimEnd('\0');
+            }
+            return "ERR: Game not active.";
+        }
+
+
+        // GET api/displaynames
+        public string getDisplayNamesJson()
+        {
+            if (active)
+            {
+                string json = "{\"names\":[";
+                for (int i = 0; i < playerSlots.Length; i++)
+                {
+                    if (playerSlots[i] == null)
+                    {
+                        json += "\"empty\"";
+                    }
+                    else
+                    {
+                        json += "\"" + playerSlots[i] + "\"";
+                    }
+
+                    if (i != playerSlots.Length - 1)
+                    {
+                        json += ",";
+                    }
+                }
+                json += "]}";
+                return json;
             }
             return "ERR: Game not active.";
         }

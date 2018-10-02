@@ -1,13 +1,13 @@
 import urllib2
 
 URL = ''
-URL = 'http://ec2-54-173-205-157.compute-1.amazonaws.com'
+# URL = 'http://ec2-54-173-205-157.compute-1.amazonaws.com'
 
 def attempt_connect(url):
     global URL
     try:
-        #URL = 'http://' + url
-        #urllib2.urlopen(URL + '/api/healthcheck').read()
+        URL = 'http://' + url
+        urllib2.urlopen(URL + '/api/healthcheck').read()
         return True
     except Exception as error:
         print error

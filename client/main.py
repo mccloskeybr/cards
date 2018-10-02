@@ -21,7 +21,7 @@ def game_loop():
     global player_id, SCREEN, CLOCK
 
     buttons = [
-            forms.Button(SCREEN, 10, 20, 100, 40, 'red', 'green', 'Reset', request.reset),
+            forms.Button(SCREEN, GAME_WIDTH/2 - 30, 100, 60, 30, 'red', 'green', 'Reset', request.reset),
     ]
 
     table = frontend.Table(SCREEN, player_id)

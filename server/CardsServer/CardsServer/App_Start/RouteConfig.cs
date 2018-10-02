@@ -20,6 +20,10 @@ namespace CardsServer
             );
 
             routes.MapRoute(
+                "Active", "api/active", new { controller = "Server", action = "shutdown" }
+            );
+
+            routes.MapRoute(
                 "Healthcheck", "api/healthcheck", new { controller = "Server", action = "healthcheck" }
             );
 
@@ -36,10 +40,6 @@ namespace CardsServer
             );
 
             routes.MapRoute(
-                "Shuffle", "api/shuffle", new { controller = "Server", action = "shuffle" }
-            );
-
-            routes.MapRoute(
                 "DrawMainToTable", "api/draw_main_to_table", new { controller = "Server", action = "drawMainToTable" }
             );
 
@@ -53,6 +53,14 @@ namespace CardsServer
 
             routes.MapRoute(
                 "DrawTableToHand", "api/draw_table_to_hand/{hand_index}/{card_index}", new { controller = "Server", action = "drawTableToHand" }
+            );
+
+            routes.MapRoute(
+                "DrawTableToDiscard", "api/draw_table_to_discard/{index}", new { controller = "Server", action = "drawTableToDiscard" }
+            );
+
+            routes.MapRoute(
+                "DrawHandToDiscard", "api/draw_hand_to_discard/{hand_index}/{card_index}", new { controller = "Server", action = "drawHandToDiscard" }
             );
 
             routes.MapRoute(

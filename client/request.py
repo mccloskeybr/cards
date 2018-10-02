@@ -47,6 +47,12 @@ def draw_hand_to_table(hand_index, card_index):
 def draw_table_to_hand(hand_index, card_index):
     return urllib2.urlopen(URL + '/api/draw_table_to_hand/' + str(hand_index) + '/' + str(card_index)).read()
 
+def draw_table_to_discard(index):
+    return urllib2.urlopen(URL + '/api/draw_table_to_discard/' + str(index)).read()
+
+def draw_hand_to_discard(hand_index, card_index):
+    return urllib2.urlopen(URL + '/api/draw_hand_to_discard/' + str(hand_index) + '/' + str(card_index)).read()
+
 def get_table_json():
     return urllib2.urlopen(URL + '/api/table').read()
 

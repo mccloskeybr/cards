@@ -14,6 +14,7 @@ extern __declspec(dllexport) void construct_table(uint8_t numHands) {
 
     TABLE = malloc(sizeof(Table));
     TABLE->mainDeck = construct_std_deck();
+    TABLE->discard = construct_deck(TABLE->mainDeck->maxCards);
     TABLE->onTable = construct_deck(TABLE->mainDeck->maxCards);
     TABLE->hands = malloc(numHands * sizeof(Deck *));
     TABLE->numHands = numHands;
@@ -31,10 +32,15 @@ extern __declspec(dllexport) void construct_table(uint8_t numHands) {
 /**
  * Destroyes a TABLE struct
  * (including all decks and relative cards)
+ *
+ * CARD references are stored in the MAINDECK, so only need
+ * to destroy the cards there. Destroying cards in other decks
+ * will cause double free.
  */
 extern __declspec(dllexport) void destroy_table() {
     destroy_cards_in_deck(TABLE->mainDeck);
     destroy_deck(TABLE->mainDeck);
+    destroy_deck(TABLE->discard);
     destroy_deck(TABLE->onTable);
 
     int i;
@@ -52,7 +58,7 @@ extern __declspec(dllexport) void destroy_table() {
 /**
  * Resets the TABLE by freeing and constructing a new TABLE
  */
-void reset_table() {
+extern __declspec(dllexport) void reset_table() {
     uint8_t numHands = TABLE->numHands;
 
     destroy_table(TABLE);
@@ -62,7 +68,7 @@ void reset_table() {
 /**
  * shuffles the main deck of the TABLE
  */
-void shuffle_main() {
+extern __declspec(dllexport) void shuffle_main() {
     shuffle(TABLE->mainDeck);
 }
 
@@ -71,7 +77,7 @@ void shuffle_main() {
 /**
  * Places a card onto the main TABLE/playing frield from the main deck
  */
-bool draw_main_to_table() {
+extern __declspec(dllexport) bool draw_main_to_table() {
 
     // attempt to draw the card. if fail, stop
     Card * card = draw_card(TABLE->mainDeck);
@@ -95,7 +101,7 @@ bool draw_main_to_table() {
 /**
  * Places a card from the main deck into one of the hands
  */
-bool draw_main_to_hand(uint8_t index) {
+extern __declspec(dllexport) bool draw_main_to_hand(uint8_t index) {
 
     Card * card = draw_card(TABLE->mainDeck);
     if (card == NULL) {
@@ -114,7 +120,7 @@ bool draw_main_to_hand(uint8_t index) {
 /**
  * Places a card onto the TABLE from one of the hands
  */
-bool draw_hand_to_table(uint8_t hand_index, uint8_t card_index) {
+extern __declspec(dllexport) bool draw_hand_to_table(uint8_t hand_index, uint8_t card_index) {
 
     Card * card = draw_specific_card(TABLE->hands[hand_index], card_index);
     if (card == NULL) {
@@ -133,7 +139,7 @@ bool draw_hand_to_table(uint8_t hand_index, uint8_t card_index) {
 /**
  * Places a card onto a specified hand from the TABLE
  */
-bool draw_table_to_hand(uint8_t hand_index, uint8_t card_index) {
+extern __declspec(dllexport) bool draw_table_to_hand(uint8_t hand_index, uint8_t card_index) {
 
     Card * card = draw_specific_card(TABLE->onTable, card_index);
     if (card == NULL) {
@@ -147,6 +153,43 @@ bool draw_table_to_hand(uint8_t hand_index, uint8_t card_index) {
 
     return true;
 
+}
+
+/**
+ * Places a specified card from the TABLE to the discard pile
+ */
+extern __declspec(dllexport) bool draw_table_to_discard(uint8_t index) {
+
+    Card * card = draw_card(TABLE->onTable);
+    if (card == NULL) {
+        return false;
+    }
+
+    if(!place_card(TABLE->discard, card)) {
+        place_card(TABLE->onTable, card);
+        return false;
+    }
+
+    return true;
+}
+
+
+/**
+ * Places a card from a specified hand into the discard pile
+ */
+extern __declspec(dllexport) bool draw_hand_to_discard(uint8_t hand_index, uint8_t card_index) {
+
+    Card * card = draw_specific_card(TABLE->hands[hand_index], card_index);
+    if (card == NULL) {
+        return false;
+    }
+
+    if(!place_card(TABLE->discard, card)) {
+        place_card(TABLE->hands[hand_index], card);
+        return false;
+    }
+
+    return true;
 }
 
 /**
@@ -206,6 +249,10 @@ extern __declspec(dllexport) void put_table_json(char * buff) {
 
     strcat(buff, "\"mainDeck\" : ");
     put_deck_json(buff, TABLE->mainDeck);
+    strcat(buff, ",");
+
+    strcat(buff, "\"discard\" : ");
+    put_deck_json(buff, TABLE->discard);
     strcat(buff, ",");
 
     strcat(buff, "\"onTable\" : ");

@@ -192,7 +192,8 @@ class Table():
         self.player_id = player_id
         self.json = ""
 
-        self.mainDeck = Deck(screen, False, 0, main.GAME_WIDTH/2, main.GAME_HEIGHT/2 - CARD_H - 75, 1)
+        self.mainDeck = Deck(screen, False, 0, main.GAME_WIDTH/2 - CARD_W, main.GAME_HEIGHT/2 - CARD_H - 75, 1)
+        self.discard = Deck(screen, True, 0, main.GAME_WIDTH/2 + CARD_W, main.GAME_HEIGHT/2 - CARD_H - 75, 1)
         self.onTable = Deck(screen, True, 0, main.GAME_WIDTH/2, main.GAME_HEIGHT/2 - 50, 30)
         self.hands = []
         for i in range(0, 4):
@@ -217,6 +218,7 @@ class Table():
             parsed_json = json.loads(json_str)
 
             self.mainDeck.set_cards(parsed_json['mainDeck'])
+            self.discard.set_cards(parsed_json['discard'])
             self.onTable.set_cards(parsed_json['onTable'])
             for i in range(len(parsed_json['hands'])):
                 self.hands[parsed_json['hands'][i]['id']].set_cards(parsed_json['hands'][i]['cards'])
@@ -229,9 +231,10 @@ class Table():
 
         # capture letting go of card before its passed to decks
         if click[0] == 0 and SELECTED_CARD != None:
-            dist_to_main  = ((mouse[0] - self.mainDeck.x_mid)**2 + (mouse[1] - self.mainDeck.y_mid)**2)**(0.5)
-            dist_to_table = ((mouse[0] - self.onTable.x_mid)**2 + (mouse[1] - self.onTable.y_mid)**2)**(0.5)
-            dist_to_hand  = ((mouse[0] - self.hands[self.player_id].x_mid)**2 + (mouse[1] - self.hands[self.player_id].y_mid)**2)**(0.5)
+            dist_to_main    = ((mouse[0] - self.mainDeck.x_mid)**2 + (mouse[1] - self.mainDeck.y_mid - CARD_H/2)**2)**(0.5)
+            dist_to_discard = ((mouse[0] - self.discard.x_mid)**2 + (mouse[1] - self.discard.y_mid - CARD_H/2)**2)**(0.5)
+            dist_to_table   = ((mouse[0] - self.onTable.x_mid)**2 + (mouse[1] - self.onTable.y_mid - CARD_H/2)**2)**(0.5)
+            dist_to_hand    = ((mouse[0] - self.hands[self.player_id].x_mid)**2 + (mouse[1] - self.hands[self.player_id].y_mid - CARD_H/2)**2)**(0.5)
 
             if SELECTED_CARD.deck == self.mainDeck:
                 if dist_to_table < dist_to_main and dist_to_table < dist_to_hand:
@@ -240,15 +243,20 @@ class Table():
                     request.draw_main_to_hand(self.player_id)
 
             elif SELECTED_CARD.deck == self.onTable:
-                if dist_to_hand < dist_to_table:
+                if dist_to_hand < dist_to_table and dist_to_hand < dist_to_discard:
                     request.draw_table_to_hand(self.player_id, self.onTable.cards.index(SELECTED_CARD))
+                elif dist_to_discard < dist_to_hand and dist_to_discard < dist_to_table:
+                    request.draw_table_to_discard(self.onTable.cards.index(SELECTED_CARD))
 
             elif SELECTED_CARD.deck == self.hands[self.player_id]:
-                if dist_to_table < dist_to_hand:
+                if dist_to_table < dist_to_hand and dist_to_table < dist_to_discard:
                     request.draw_hand_to_table(self.player_id, self.hands[self.player_id].cards.index(SELECTED_CARD))
+                elif dist_to_discard < dist_to_hand and dist_to_discard < dist_to_table:
+                    request.draw_hand_to_discard(self.player_id, self.hands[self.player_id].cards.index(SELECTED_CARD))
 
         # tell decks to check status of their cards
         self.mainDeck.check()
+        self.discard.check()
         self.onTable.check()
         for hand in self.hands:
             hand.check()
@@ -258,6 +266,7 @@ class Table():
         global SELECTED_CARD
         
         self.mainDeck.render()
+        self.discard.render()
         self.onTable.render()
         for hand in self.hands:
             hand.render()
@@ -265,6 +274,9 @@ class Table():
         # render display names if hover
         mouse = pygame.mouse.get_pos()
         for index, hand in enumerate(self.hands):
+            if index == self.player_id:
+                continue
+
             if hand.rect.collidepoint(mouse):
                 display_names = json.loads(display_names_json)['names']
                 name = display_names[index]

@@ -35,8 +35,11 @@ int main() {
                  draw_main_to_table\n \
                  draw_main_to_hand <index>\n \
                  draw_hand_to_table <hand_index> <card_index>\n \
-                 draw_table_to_hand <hand_index> <card_index>\n");
+                 draw_table_to_hand <hand_index> <card_index>\n \
+                 draw_hand_to_discard <hand_index> <card_index>\n \
+                 draw_table_to_discard <index>\n");
         }
+
         else if (strcmp(cmd, "quit") == 0) {
             quit = true;
             printf("exiting the program.\n");
@@ -142,10 +145,52 @@ int main() {
 
         }
 
+        else if (strcmp(cmd, "draw_table_to_discard") == 0) {
+
+            int index = -1;
+
+            scanf("%d", &index);
+            if (index >= 0 && index <= TABLE->onTable->currCard) {
+
+                draw_table_to_discard(index);
+                print_deck(TABLE->discard);
+
+            }
+            else {
+                printf("Invalid index(indicies).\n");
+            }
+
+
+        }
+
+        else if (strcmp(cmd, "draw_hand_to_discard") == 0) {
+
+            int hand_index = -1;
+            int card_index = -1;
+
+            scanf("%d %d", &hand_index, &card_index);
+            if (hand_index >= 0 && hand_index < TABLE->numHands && \
+                card_index >= 0 && card_index <= TABLE->hands[hand_index]->currCard) {
+
+                draw_hand_to_discard(hand_index, card_index);
+                print_deck(TABLE->discard);
+
+            }
+            else {
+                printf("Invalid index(indicies).\n");
+            }
+
+
+        }
+
 
         else {
             printf("'%s': command not recognized.\n", cmd);
         }
+
+        char * buff = calloc(1000, sizeof(char));
+        put_table_json(buff);
+        free(buff);
 
     }
 

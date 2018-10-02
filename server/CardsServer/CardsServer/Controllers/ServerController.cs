@@ -5,7 +5,6 @@ using System.Runtime.InteropServices;
 using System.Web;
 using System.Web.Mvc;
 using Aws.GameLift.Server;
-using CardsServer.App_Data;
 
 namespace CardServer.Controllers
 {
@@ -36,18 +35,35 @@ namespace CardServer.Controllers
         static extern bool draw_table_to_hand(byte hand_index, byte card_index);
 
         [DllImport("cards_backend.so", CallingConvention = CallingConvention.Cdecl)]
+        static extern bool draw_table_to_discard(byte index);
+
+        [DllImport("cards_backend.so", CallingConvention = CallingConvention.Cdecl)]
+        static extern bool draw_hand_to_discard(byte hand_index, byte card_index);
+
+        [DllImport("cards_backend.so", CallingConvention = CallingConvention.Cdecl)]
         static extern void put_table_json(byte[] buff);
 
-        private static bool active = false;
+        private static bool isActive = false;
         private static string[] playerSlots = new string[4];
+        private static string tableJson;
+
+        // Updates the table obj JSON for GET at /api/table
+        private void updateTableJson()
+        {
+            byte[] buff = new byte[800];
+            put_table_json(buff);
+            tableJson = "" + System.Text.Encoding.Default.GetString(buff).TrimEnd('\0');
+        }
 
         // GET api/start
         public bool start()
         {
-            if (!active)
+            if (!isActive)
             {
                 construct_table(4);
-                active = true;
+                shuffle_main();
+                updateTableJson();
+                isActive = true;
                 return true;
             }
 
@@ -57,15 +73,20 @@ namespace CardServer.Controllers
         // GET api/shutdown
         public bool shutdown()
         {
-            if (active)
+            if (isActive)
             {
                 destroy_table();
-                active = false;
-
+                isActive = false;
                 return true;
             }
 
             return false;
+        }
+
+        // GET api/active
+        public bool active()
+        {
+            return isActive;
         }
 
         // GET api/healthcheck
@@ -104,21 +125,11 @@ namespace CardServer.Controllers
         // GET api/reset
         public bool reset()
         {
-            if (active)
+            if (isActive)
             {
                 reset_table();
-                return true;
-            }
-
-            return false;
-        }
-
-        // GET api/shuffle
-        public bool shuffle()
-        {
-            if (active)
-            {
                 shuffle_main();
+                updateTableJson();
                 return true;
             }
 
@@ -128,9 +139,11 @@ namespace CardServer.Controllers
         // GET api/draw_main_to_table
         public bool drawMainToTable()
         {
-            if (active)
+            if (isActive)
             {
-                return draw_main_to_table();
+                bool toReturn = draw_main_to_table();
+                updateTableJson();
+                return toReturn;
             }
             return false;
         }
@@ -138,9 +151,11 @@ namespace CardServer.Controllers
         // GET api/draw_main_to_hand/{index}
         public bool drawMainToHand(int index)
         {
-            if (active)
+            if (isActive)
             {
-                return draw_main_to_hand((byte)index);
+                bool toReturn = draw_main_to_hand((byte)index);
+                updateTableJson();
+                return toReturn;
             }
             return false;
         }
@@ -148,9 +163,11 @@ namespace CardServer.Controllers
         // GET api/draw_hand_to_table/{hand_index}/{card_index}
         public bool drawHandToTable(int hand_index, int card_index)
         {
-            if (active)
+            if (isActive)
             {
-                return draw_hand_to_table((byte)hand_index, (byte)card_index);
+                bool toReturn = draw_hand_to_table((byte)hand_index, (byte)card_index);
+                updateTableJson();
+                return toReturn;
             }
             return false;
         }
@@ -158,9 +175,35 @@ namespace CardServer.Controllers
         // GET api/draw_table_to_hand/{hand_index}/{card_index}
         public bool drawTableToHand(int hand_index, int card_index)
         {
-            if (active)
+            if (isActive)
             {
-                return draw_table_to_hand((byte)hand_index, (byte)card_index);
+                bool toReturn = draw_table_to_hand((byte)hand_index, (byte)card_index);
+                updateTableJson();
+                return toReturn;
+            }
+            return false;
+        }
+
+        // GET api/draw_table_to_discard/{index}
+        public bool drawTableToDiscard(int index)
+        {
+            if (isActive)
+            {
+                bool toReturn = draw_table_to_discard((byte)index);
+                updateTableJson();
+                return toReturn;
+            }
+            return false;
+        }
+
+        // GET api/draw_hand_to_discard/{hand_index}/{card_index}
+        public bool drawHandToDiscard(int hand_index, int card_index)
+        {
+            if (isActive)
+            {
+                bool toReturn = draw_hand_to_discard((byte)hand_index, (byte)card_index);
+                updateTableJson();
+                return toReturn;
             }
             return false;
         }
@@ -168,11 +211,9 @@ namespace CardServer.Controllers
         // GET api/table
         public string getTableJson()
         {
-            if (active)
+            if (isActive)
             {
-                byte[] buff = new byte[760];
-                put_table_json(buff);
-                return "" + System.Text.Encoding.Default.GetString(buff).TrimEnd('\0');
+                return tableJson;
             }
             return "ERR: Game not active.";
         }
@@ -181,7 +222,7 @@ namespace CardServer.Controllers
         // GET api/displaynames
         public string getDisplayNamesJson()
         {
-            if (active)
+            if (isActive)
             {
                 string json = "{\"names\":[";
                 for (int i = 0; i < playerSlots.Length; i++)

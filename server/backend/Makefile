@@ -9,7 +9,7 @@ main: main.o cards.o log.o table.o
 	$(CC) -o main main.o cards.o log.o table.o
 
 library: cards.o log.o table.o
-	$(CC) -shared -o ../cards_backend.so cards.o log.o table.o
+	$(CC) -shared -o cards_backend.so cards.o log.o table.o
 
 clean:
 	rm -f main main.o cards.o log.o table.o cards_backend.so

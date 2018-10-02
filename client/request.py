@@ -1,12 +1,13 @@
 import urllib2
 
 URL = ''
-# URL = 'http://ec2-54-173-205-157.compute-1.amazonaws.com'
+URL = 'http://ec2-54-173-205-157.compute-1.amazonaws.com'
+URL = 'http://localhost:5757'
 
 def attempt_connect(url):
     global URL
     try:
-        URL = 'http://' + url
+        #URL = 'http://' + url
         urllib2.urlopen(URL + '/api/healthcheck').read()
         return True
     except Exception as error:
@@ -25,8 +26,8 @@ def reset():
 def healthcheck():
     return urllib2.urlopen(URL + '/api/healthcheck').read()
 
-def register():
-    return urllib2.urlopen(URL + '/api/register').read()
+def register(name):
+    return urllib2.urlopen(URL + '/api/register/' + name).read()
 
 def unregister(id):
     return urllib2.urlopen(URL + '/api/unregister/' + str(id)).read()
@@ -48,3 +49,6 @@ def draw_table_to_hand(hand_index, card_index):
 
 def get_table_json():
     return urllib2.urlopen(URL + '/api/table').read()
+
+def get_display_names_json():
+    return urllib2.urlopen(URL + '/api/displaynames').read()

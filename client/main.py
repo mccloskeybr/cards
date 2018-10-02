@@ -13,10 +13,6 @@ MAX_TICKS_PER_SECOND = 60
 player_id = -1
 
 
-
-def draw_main_to_hand():
-    return request.draw_main_to_hand(player_id)
-
 '''
 Contains main game loop
 
@@ -26,9 +22,6 @@ def game_loop():
 
     buttons = [
             forms.Button(SCREEN, 10, 20, 100, 40, 'red', 'green', 'Reset', request.reset),
-            forms.Button(SCREEN, 10, 70, 100, 40, 'red', 'green', 'Shuffle', request.shuffle),
-            forms.Button(SCREEN, 10, 120, 100, 40, 'red', 'green', 'MainToTable', request.draw_main_to_table),
-            forms.Button(SCREEN, 10, 170, 100, 40, 'red', 'green', 'MainToHand', draw_main_to_hand)
     ]
 
     table = frontend.Table(SCREEN, player_id)
@@ -40,7 +33,10 @@ def game_loop():
             if event.type == pygame.QUIT:
                 quit = True
 
-        table.load_json(request.get_table_json())
+        display_names_json = request.get_display_names_json()
+        table_json = request.get_table_json()
+
+        table.load_json(table_json)
         table.check()
 
         SCREEN.fill(forms.colors['black'])
@@ -49,7 +45,7 @@ def game_loop():
             button.update()
             button.render()
 
-        table.render()
+        table.render(display_names_json)
 
         pygame.display.flip()
     
@@ -92,7 +88,7 @@ def init():
         if submit.active == True:
             submit.active = False
             if request.attempt_connect(server_name.text.encode('ascii')) == True:
-                player_id = int(request.register())
+                player_id = int(request.register(display_name.text))
                 if player_id != -1:
                     accepted = True
                 else:

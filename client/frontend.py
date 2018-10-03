@@ -52,7 +52,7 @@ class Card():
             self.click_h = click_w
 
     # checks to see if the card has been selected. if so, have card follow mouse
-    def check(self, show_card):
+    def update(self, show_card):
         global SELECTED_CARD
         mouse = pygame.mouse.get_pos()
         click = pygame.mouse.get_pressed()
@@ -62,9 +62,14 @@ class Card():
         self.render_x = self.x
         self.render_y = self.y
 
+        # raise card if moused over
+        if SELECTED_CARD == None and click[0] == 0 \
+                and self.x < mouse[0] < self.x + self.click_w \
+                and self.y < mouse[1] < self.y + self.click_h:
+            self.render_y = self.y - 30
+ 
         # was selected and user let go of button
-        # TODO: place on table or hand depending on where mouse coords are
-        if SELECTED_CARD == self and click[0] == 0:
+        elif SELECTED_CARD == self and click[0] == 0:
             SELECTED_CARD = None
 
         # user is currently dragging the card
@@ -172,9 +177,9 @@ class Deck():
             variable_coord += self.spacer
 
     # Checks all cards
-    def check(self, show_hand):
+    def update(self, show_hand):
         for card in self.cards:
-            card.check(show_hand)
+            card.update(show_hand)
 
     # Renders all cards
     def render(self):
@@ -241,8 +246,8 @@ class Table():
                 self.display_names[player['id']] = player['name']
                 self.show_hands[player['id']] = (player['showHand'] == 'True')
 
-    # checks all relevant decks. also handles when a selected card is unselected.
-    def check(self):
+    # updates all relevant decks. also handles when a selected card is unselected.
+    def update(self):
         global SELECTED_CARD
         mouse = pygame.mouse.get_pos()
         click = pygame.mouse.get_pressed()
@@ -286,15 +291,15 @@ class Table():
                     request.draw_hand_to_discard(self.player_id, self.hands[self.player_id].cards.index(SELECTED_CARD))
 
         # tell decks to check status of their cards
-        self.mainDeck.check(False)
-        self.discard.check(True)
-        self.onTable.check(True)
+        self.mainDeck.update(False)
+        self.discard.update(True)
+        self.onTable.update(True)
         for index, hand in enumerate(self.hands):
             # backwards from the perspective of the player
             if index == self.player_id:
-                hand.check(not self.show_hands[index])
+                hand.update(not self.show_hands[index])
             else:
-                hand.check(self.show_hands[index])
+                hand.update(self.show_hands[index])
 
     # renders all relevant decks
     def render(self):

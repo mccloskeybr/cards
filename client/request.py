@@ -20,11 +20,11 @@ def start():
 def shutdown():
     return urllib2.urlopen(URL + '/api/shutdown').read()
 
+def active():
+    return urllib2.urlopen(URL + '/api/active').read()
+
 def reset():
     return urllib2.urlopen(URL + '/api/reset').read()
-
-def healthcheck():
-    return urllib2.urlopen(URL + '/api/healthcheck').read()
 
 def register(name):
     return urllib2.urlopen(URL + '/api/register/' + name).read()
@@ -32,8 +32,8 @@ def register(name):
 def unregister(id):
     return urllib2.urlopen(URL + '/api/unregister/' + str(id)).read()
 
-def shuffle():
-    return urllib2.urlopen(URL + '/api/shuffle').read()
+def toggle_show_hand(index):
+    return urllib2.urlopen(URL + '/api/toggle_show_hand/' + str(index)).read()
 
 def draw_main_to_table():
     return urllib2.urlopen(URL + '/api/draw_main_to_table').read()
@@ -53,8 +53,14 @@ def draw_table_to_discard(index):
 def draw_hand_to_discard(hand_index, card_index):
     return urllib2.urlopen(URL + '/api/draw_hand_to_discard/' + str(hand_index) + '/' + str(card_index)).read()
 
+def draw_discard_to_table():
+    return urllib2.urlopen(URL + '/api/draw_discard_to_table').read()
+
+def draw_discard_to_hand(index):
+    return urllib2.urlopen(URL + '/api/draw_discard_to_hand/' + str(index)).read()
+
 def get_table_json():
     return urllib2.urlopen(URL + '/api/table').read()
 
-def get_display_names_json():
-    return urllib2.urlopen(URL + '/api/displaynames').read()
+def get_players_json():
+    return urllib2.urlopen(URL + '/api/players').read()

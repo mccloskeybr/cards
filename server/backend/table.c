@@ -193,8 +193,45 @@ extern __declspec(dllexport) bool draw_hand_to_discard(uint8_t hand_index, uint8
 }
 
 /**
+ * Places a card from the discard pile onto the table
+ */
+extern __declspec(dllexport) bool draw_discard_to_table() {
+
+    Card * card = draw_card(TABLE->discard);
+    if (card == NULL) {
+        return false;
+    }
+
+    if(!place_card(TABLE->onTable, card)) {
+        place_card(TABLE->discard, card);
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Places a card from the discard pile into a players hand
+ */
+extern __declspec(dllexport) bool draw_discard_to_hand(uint8_t index) {
+
+    Card * card = draw_card(TABLE->discard);
+    if (card == NULL) {
+        return false;
+    }
+
+    if(!place_card(TABLE->hands[index], card)) {
+        place_card(TABLE->discard, card);
+        return false;
+    }
+
+    return true;
+}
+
+
+/**
  * Creates a deck json, starting from [
- * e.g. [ "12 hearts, 13 clubs, ... ]
+ * e.g. [ "12 hearts", "13 clubs", ... ]
  */
 void put_deck_json(char * buff, Deck * deck) {
     char * tempBuff = calloc(20, sizeof(char));

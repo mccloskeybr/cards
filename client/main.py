@@ -1,4 +1,5 @@
 import pygame
+import json
 import request
 import frontend
 import forms
@@ -33,10 +34,10 @@ def game_loop():
             if event.type == pygame.QUIT:
                 quit = True
 
-        display_names_json = request.get_display_names_json()
+        players_json = request.get_players_json()
         table_json = request.get_table_json()
+        table.load_json(table_json, players_json)
 
-        table.load_json(table_json)
         table.check()
 
         SCREEN.fill(forms.colors['black'])
@@ -45,7 +46,7 @@ def game_loop():
             button.update()
             button.render()
 
-        table.render(display_names_json)
+        table.render()
 
         pygame.display.flip()
     
@@ -87,7 +88,13 @@ def init():
 
         if submit.active == True:
             submit.active = False
-            if request.attempt_connect(server_name.text.encode('ascii')) == True:
+            # attempt to connect
+            if request.attempt_connect(server_name.text.encode('ascii').replace(' ', '_')) == True:
+                # start the server if not active
+                if (str(request.active()) != 'True'):
+                    request.start()
+
+                # request registration
                 player_id = int(request.register(display_name.text))
                 if player_id != -1:
                     accepted = True
@@ -114,7 +121,18 @@ Run any shutdown code necesarry
 def shutdown():
     global player_id
 
+    # unregister player
     request.unregister(player_id)
+
+    # shutdown server if no players
+    players = json.loads(request.get_players_json())['players']
+    shutdown = True
+    for player in players:
+        if player['name'] != 'null':
+            shutdown = False
+            break
+    if shutdown:
+        request.shutdown()
 
 if __name__ == '__main__':
     init()

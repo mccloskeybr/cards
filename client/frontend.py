@@ -30,8 +30,8 @@ class Card():
     def __init__(self, screen, deck, img_key, show, rot, draw_horiz, x, y, click_w):
         self.screen = screen
         self.deck = deck
-        self.img = card_images[img_key]
-        self.back_img = card_images['back']
+        self.img = pygame.transform.rotate(card_images[img_key], rot)
+        self.back_img = pygame.transform.rotate(card_images['back'], rot)
         self.show = show
         self.rot = rot
 
@@ -52,10 +52,12 @@ class Card():
             self.click_h = click_w
 
     # checks to see if the card has been selected. if so, have card follow mouse
-    def check(self):
+    def check(self, show_card):
         global SELECTED_CARD
         mouse = pygame.mouse.get_pos()
         click = pygame.mouse.get_pressed()
+
+        self.show = show_card
 
         self.render_x = self.x
         self.render_y = self.y
@@ -79,9 +81,9 @@ class Card():
     # renders the card
     def render(self):
         if self.show:
-            self.screen.blit(pygame.transform.rotate(self.img, self.rot), (self.render_x, self.render_y))
+            self.screen.blit(self.img, (self.render_x, self.render_y))
         else:
-            self.screen.blit(pygame.transform.rotate(self.back_img, self.rot), (self.render_x, self.render_y))
+            self.screen.blit(self.back_img, (self.render_x, self.render_y))
 
 
 '''
@@ -126,7 +128,7 @@ class Deck():
             for key in card_keys:
                 if key not in self.card_keys:
                     self.card_keys.append(key)
-                    self.cards.append(Card(self.screen, self, key, self.show, self.rot, draw_horiz, 100, 100, 0))
+                    self.cards.append(Card(self.screen, self, key, self.show, self.rot, draw_horiz, -1, -1, -1))
 
         full_deck_width = (len(self.cards) - 1) * self.spacer + CARD_W
 
@@ -170,9 +172,9 @@ class Deck():
             variable_coord += self.spacer
 
     # Checks all cards
-    def check(self):
+    def check(self, show_hand):
         for card in self.cards:
-            card.check()
+            card.check(show_hand)
 
     # Renders all cards
     def render(self):
@@ -190,7 +192,10 @@ class Table():
     def __init__(self, screen, player_id):
         self.screen = screen
         self.player_id = player_id
-        self.json = ""
+        self.json = ''
+        self.players_json = ''
+        self.display_names = ['', '', '', '']
+        self.show_hands = [False, False, False, False]
 
         self.mainDeck = Deck(screen, False, 0, main.GAME_WIDTH/2 - CARD_W, main.GAME_HEIGHT/2 - CARD_H - 75, 1)
         self.discard = Deck(screen, True, 0, main.GAME_WIDTH/2 + CARD_W, main.GAME_HEIGHT/2 - CARD_H - 75, 1)
@@ -198,7 +203,7 @@ class Table():
         self.hands = []
         for i in range(0, 4):
             # space between hand and edge of screen
-            opponent_hand_spacer = 40
+            opponent_hand_spacer = 50
 
             # following checks ensure circular positioning of hands around table
             pos = (i - self.player_id) % 4
@@ -212,7 +217,7 @@ class Table():
                 self.hands.append(Deck(screen, False, 270, -CARD_H + opponent_hand_spacer, main.GAME_HEIGHT/2, 30))
 
     # updates the object iff the json input is different from the stored json
-    def load_json(self, json_str):
+    def load_json(self, json_str, players_json):
         if self.json != json_str:
             self.json = json_str
             parsed_json = json.loads(json_str)
@@ -223,11 +228,22 @@ class Table():
             for i in range(len(parsed_json['hands'])):
                 self.hands[parsed_json['hands'][i]['id']].set_cards(parsed_json['hands'][i]['cards'])
 
+        if self.players_json != players_json:
+            self.players_json = players_json
+            players = json.loads(players_json)['players']
+            for player in players:
+                self.display_names[player['id']] = player['name']
+                self.show_hands[player['id']] = (player['showHand'] == 'True')
+
     # checks all relevant decks. also handles when a selected card is unselected.
     def check(self):
         global SELECTED_CARD
         mouse = pygame.mouse.get_pos()
         click = pygame.mouse.get_pressed()
+
+        # show hand
+        if click[2] == 1 and self.hands[self.player_id].rect.collidepoint(mouse):
+            request.toggle_show_hand(self.player_id)
 
         # capture letting go of card before its passed to decks
         if click[0] == 0 and SELECTED_CARD != None:
@@ -242,6 +258,12 @@ class Table():
                 elif dist_to_hand < dist_to_main and dist_to_hand < dist_to_table:
                     request.draw_main_to_hand(self.player_id)
 
+            elif SELECTED_CARD.deck == self.discard:
+                if dist_to_hand < dist_to_table and dist_to_hand < dist_to_discard:
+                    request.draw_discard_to_hand(self.player_id)
+                elif dist_to_table < dist_to_hand and dist_to_table < dist_to_discard:
+                    request.draw_discard_to_table()
+
             elif SELECTED_CARD.deck == self.onTable:
                 if dist_to_hand < dist_to_table and dist_to_hand < dist_to_discard:
                     request.draw_table_to_hand(self.player_id, self.onTable.cards.index(SELECTED_CARD))
@@ -255,14 +277,18 @@ class Table():
                     request.draw_hand_to_discard(self.player_id, self.hands[self.player_id].cards.index(SELECTED_CARD))
 
         # tell decks to check status of their cards
-        self.mainDeck.check()
-        self.discard.check()
-        self.onTable.check()
-        for hand in self.hands:
-            hand.check()
+        self.mainDeck.check(False)
+        self.discard.check(True)
+        self.onTable.check(True)
+        for index, hand in enumerate(self.hands):
+            # backwards from the perspective of the player
+            if index == self.player_id:
+                hand.check(not self.show_hands[index])
+            else:
+                hand.check(self.show_hands[index])
 
     # renders all relevant decks
-    def render(self, display_names_json):
+    def render(self):
         global SELECTED_CARD
         
         self.mainDeck.render()
@@ -278,8 +304,7 @@ class Table():
                 continue
 
             if hand.rect.collidepoint(mouse):
-                display_names = json.loads(display_names_json)['names']
-                name = display_names[index]
+                name = self.display_names[index]
 
                 text_font = pygame.font.SysFont('Comic Sans MS', 16)
                 text_surface = text_font.render(name, True, forms.colors['white'])
@@ -287,6 +312,15 @@ class Table():
                 w, h = text_font.size(name)
                 x = mouse[0] - w/2
                 y = mouse[1] - h
+                if x < 0:
+                    x = 0
+                elif x + w > main.GAME_WIDTH:
+                    x -= x + w - main.GAME_WIDTH
+
+                if y < 0:
+                    y = 0
+                elif y + h > main.GAME_HEIGHT:
+                    y -= y + h - main.GAME_HEIGHT
 
                 pygame.draw.rect(self.screen, forms.colors['gray'], (x, y, w, h))
                 self.screen.blit(text_surface, (x, y))

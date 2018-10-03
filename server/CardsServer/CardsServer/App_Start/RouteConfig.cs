@@ -20,7 +20,7 @@ namespace CardsServer
             );
 
             routes.MapRoute(
-                "Active", "api/active", new { controller = "Server", action = "shutdown" }
+                "Active", "api/active", new { controller = "Server", action = "active" }
             );
 
             routes.MapRoute(
@@ -37,6 +37,10 @@ namespace CardsServer
 
             routes.MapRoute(
                 "Reset", "api/reset", new { controller = "Server", action = "reset" }
+            );
+
+            routes.MapRoute(
+                "ToggleShowHand", "api/toggle_show_hand/{index}", new { controller = "Server", action = "toggleShowHand" }
             );
 
             routes.MapRoute(
@@ -64,11 +68,19 @@ namespace CardsServer
             );
 
             routes.MapRoute(
+                "DrawDiscardToTable", "api/draw_discard_to_table", new { controller = "Server", action = "drawDiscardToTable" }
+            );
+
+            routes.MapRoute(
+                "DrawDiscardToHand", "api/draw_discard_to_hand/{index}", new { controller = "Server", action = "drawDiscardToHand" }
+            );
+
+            routes.MapRoute(
                 "TableJSON", "api/table", new { controller = "Server", action = "getTableJson" }
             );
 
             routes.MapRoute(
-                "DisplayNamesJSON", "api/displaynames", new { controller = "Server", action = "getDisplayNamesJson" }
+                "PlayersJSON", "api/players", new { controller = "Server", action = "getPlayersJson" }
             );
 
         }

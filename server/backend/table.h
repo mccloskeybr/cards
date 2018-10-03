@@ -17,6 +17,7 @@
  */
 typedef struct {
     Deck * mainDeck;
+    Deck * discard;
     Deck * onTable;
     Deck ** hands;
     uint8_t numHands;
@@ -35,6 +36,10 @@ extern __declspec(dllexport) bool draw_main_to_table();
 extern __declspec(dllexport) bool draw_main_to_hand(uint8_t index);
 extern __declspec(dllexport) bool draw_hand_to_table(uint8_t hand_index, uint8_t card_index);
 extern __declspec(dllexport) bool draw_table_to_hand(uint8_t hand_index, uint8_t card_index);
+extern __declspec(dllexport) bool draw_table_to_discard(uint8_t index);
+extern __declspec(dllexport) bool draw_hand_to_discard(uint8_t hand_index, uint8_t card_index);
+extern __declspec(dllexport) bool draw_discard_to_table();
+extern __declspec(dllexport) bool draw_discard_to_hand(uint8_t index);
 
 void put_deck_json(char * buff, Deck * deck);
 extern __declspec(dllexport) void put_table_json(char * buff);

@@ -178,8 +178,13 @@ class Deck():
 
     # Renders all cards
     def render(self):
-        for card in self.cards:
-            card.render()
+        pos = self.rot/90
+        if pos == 0 or pos == 3:    
+            for card in self.cards:
+                card.render()
+        else:
+            for card in reversed(self.cards):
+                card.render()
 
 
 '''
@@ -196,6 +201,7 @@ class Table():
         self.players_json = ''
         self.display_names = ['', '', '', '']
         self.show_hands = [False, False, False, False]
+        self.show_player_hand_toggle = False
 
         self.mainDeck = Deck(screen, False, 0, main.GAME_WIDTH/2 - CARD_W, main.GAME_HEIGHT/2 - CARD_H - 75, 1)
         self.discard = Deck(screen, True, 0, main.GAME_WIDTH/2 + CARD_W, main.GAME_HEIGHT/2 - CARD_H - 75, 1)
@@ -242,7 +248,10 @@ class Table():
         click = pygame.mouse.get_pressed()
 
         # show hand
-        if click[2] == 1 and self.hands[self.player_id].rect.collidepoint(mouse):
+        if (click[2] == 1 and self.show_player_hand_toggle == False and self.hands[self.player_id].rect.collidepoint(mouse)) or \
+                (click[2] == 0 and self.show_player_hand_toggle == True) :
+
+            self.show_player_hand_toggle = not self.show_player_hand_toggle
             request.toggle_show_hand(self.player_id)
 
         # capture letting go of card before its passed to decks

@@ -2,7 +2,7 @@ import urllib2
 
 URL = ''
 URL = 'http://ec2-54-173-205-157.compute-1.amazonaws.com'
-URL = 'http://localhost:5757'
+#URL = 'http://localhost:5757'
 
 def attempt_connect(url):
     global URL
